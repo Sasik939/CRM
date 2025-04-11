@@ -121,11 +121,11 @@ Backend: Modify POST /api/v1/login/access-token. Accept optional remember_me: bo
 Frontend: Modify Login.cshtml.cs OnPostAsync. Send remember_me flag if checked. Expect success response (not token body). Redirect to a protected page (e.g., /Dashboard) on success.
 Backend: N/A.
 
-[ ] Task 31: Update get_current_user Dependency for Cookie (Backend)
+[x] Task 31: Update get_current_user Dependency for Cookie (Backend)
 Frontend: N/A.
 Backend: Modify dependencies.py. Change get_current_user to accept request: Request. Read token from request.cookies.get("access_token"). If missing or invalid/expired, raise HTTPException(401). Remove OAuth2PasswordBearer. Keep user lookup and active check.
 
-[ ] Task 32: Test Cookie Authentication Flow (Manual)
+[x] Task 32: Test Cookie Authentication Flow (Manual)
 Frontend: Register. Login (check browser cookies). Access /api/v1/users/me endpoint via a test page or directly (should work).
 Backend: Ensure /users/me works with cookie.
 
