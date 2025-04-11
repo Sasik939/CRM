@@ -1,0 +1,1222 @@
+Phase 1: Project Initialization & Core Setup (Tasks 1-20)
+
+[x] Task 1: Setup Project Structure & Git
+Frontend: Create root CrmAssistant folder, subfolder CrmAssistant.WebApp.
+Backend: Create subfolder CrmAssistant.Api. Initialize Git in root, create .gitignore for Python/.NET.
+
+[x] Task 2: Setup Backend Environment & Core Dependencies
+Frontend: N/A.
+Backend: Navigate to CrmAssistant.Api, create and activate Python venv. Run pip install fastapi uvicorn sqlalchemy alembic aiosqlite "passlib[bcrypt]" python-jose[cryptography] pydantic[email] python-multipart slowapi.
+
+[x] Task 3: Initialize FastAPI App & Configuration
+Frontend: N/A.
+Backend: Create main.py with basic FastAPI instance and root endpoint. Create config.py with Pydantic Settings for SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, UPLOAD_DIR.
+
+[x] Task 4: Setup Database Connection & Base Model
+Frontend: N/A.
+Backend: Create database.py defining SQLAlchemy engine (crm_assistant.db), SessionLocal, Base. Create models/base.py for the declarative base. Create models/__init__.py.
+
+[x] Task 5: Initialize Alembic for Migrations
+Frontend: N/A.
+Backend: Run alembic init alembic. Configure alembic.ini and env.py to use settings from database.py and target models.Base.metadata. Run initial migration (alembic revision --autogenerate -m "Initial", alembic upgrade head).
+
+[x] Task 6: Setup .NET Razor Pages Project
+Frontend: Navigate to CrmAssistant.WebApp, run dotnet new webapp -o .. Remove default HTTPS redirection if desired. Clean default Privacy/Index page content.
+Backend: N/A.
+
+[x] Task 7: Install and Configure Tailwind CSS
+Frontend: Install Tailwind CSS via npm (npm init -y, npm install -D tailwindcss postcss autoprefixer, npx tailwindcss init -p). Configure tailwind.config.js (content paths) and postcss.config.js. Create Styles/app.css with Tailwind directives. Configure build script (e.g., in package.json) to output wwwroot/css/site.css.
+Backend: N/A.
+
+[x] Task 8: Setup Basic Layout (_Layout.cshtml)
+Frontend: Modify Pages/Shared/_Layout.cshtml. Use Tailwind classes for structure (flex flex-col min-h-screen), typography (antialiased text-gray-900). Include @RenderBody(). Reference site.css. Set a basic @ViewData["Title"]. Remove default nav/footer.
+Backend: N/A.
+
+[x] Task 9: Create Frontend API Client Service
+Frontend: Create Services/ApiClient.cs. Use IHttpClientFactory (register in Program.cs) configured for the FastAPI backend URL (e.g., http://localhost:8000). Add basic methods (GET, POST, PUT, DELETE) handling JSON and basic errors. Include a method for multipart/form-data POST.
+Backend: N/A.
+
+[x] Task 10: Configure CORS & Backend Health Check
+Frontend: N/A.
+Backend: In main.py, add CORSMiddleware allowing the .NET app's origin, credentials, methods, headers. Add a GET /api/health endpoint returning {"status": "ok"}.
+
+[x] Task 11: Create Frontend Health Check Page
+Frontend: Create Pages/HealthCheck.cshtml and HealthCheck.cshtml.cs. Use ApiClient to call /api/health. Display status using Tailwind (p-4, text-green-600/text-red-600).
+Backend: N/A.
+
+[x] Task 12: Implement Basic Error Handling Middleware (Backend)
+Frontend: N/A.
+Backend: Create middleware in FastAPI (main.py or middleware.py) to catch exceptions and return a standard JSON 500 error response.
+
+[x] Task 13: Implement Basic Error Handling Page (Frontend)
+Frontend: Configure UseExceptionHandler("/Error") in Program.cs. Customize Pages/Error.cshtml with user-friendly message using Tailwind.
+
+[x] Task 14: Define User Model & Schemas (Backend)
+Frontend: N/A.
+Backend: Create models/user.py with User (id, email, hashed_password, full_name, is_active, role). Create schemas/user.py with Pydantic models: UserBase, UserCreate, UserUpdate, UserInDB (no password), User (for API response, no password). Configure orm_mode/from_attributes.
+
+[x] Task 15: Add User Table Migration
+Frontend: N/A.
+Backend: Update imports. alembic revision --autogenerate -m "Add user table". Review. alembic upgrade head.
+
+[x] Task 16: Implement Security Utilities (Password Hashing, JWT)
+Frontend: N/A.
+Backend: Create security.py. Add verify_password, get_password_hash using passlib. Add create_access_token using python-jose.jwt and config settings (secret, algorithm, expiry).
+
+[x] Task 17: Define Token Schemas (Backend)
+Frontend: N/A.
+Backend: Create schemas/token.py with Token (access_token, token_type) and TokenData (email).
+
+[x] Task 18: Create User CRUD Operations (Backend)
+Frontend: N/A.
+Backend: Create crud/crud_user.py. Implement get_user, get_user_by_email, get_users, create_user (hashes password, sets default role 'user'), update_user, delete_user.
+
+[x] Task 19: Create DB Session Dependency (Backend)
+Frontend: N/A.
+Backend: Create dependencies.py. Add get_db() dependency yielding a SessionLocal.
+
+[x] Task 20: Commit Initial Project Setup
+Frontend: N/A. git add ., git commit -m "feat: Initial project structure, dependencies, and core setup"
+Backend: N/A. git add ., git commit -m "feat: Initial project structure, dependencies, and core setup"
+
+Phase 2: Authentication Flow (Tasks 21-45)
+
+[x] Task 21: Create User Registration Endpoint (Backend)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/users.py. Add POST /api/v1/users/register. Use UserCreate schema. Check if user exists. Call crud_user.create_user. Return schemas.User. Use get_db.
+
+[x] Task 22: Create Login Endpoint (Backend - Initial Token in Body)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/login.py. Add POST /api/v1/login/access-token. Takes OAuth2PasswordRequestForm (email as username). Authenticate user (find by email, verify password). Create JWT token. Return schemas.Token.
+
+[x] Task 23: Implement Token Decoding & Current User Dependency (Backend - Initial Header Based)
+Frontend: N/A.
+Backend: In dependencies.py, create oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login/access-token"). Create get_current_user(token: str = Depends(oauth2_scheme)) that decodes token, validates, finds user in DB via crud_user, handles errors (HTTPException). Check is_active.
+
+[x] Task 24: Create "Get Current User" Endpoint (Backend)
+Frontend: N/A.
+Backend: In users.py, add GET /api/v1/users/me. Protect with Depends(get_current_user). Return current schemas.User.
+
+[x] Task 25: Create Registration Page (Frontend - Form)
+Frontend: Create Pages/Account/Register.cshtml & Register.cshtml.cs. Add form (Full Name, Email, Password, Confirm Password) styled with Tailwind. Bind properties ([BindProperty]).
+Backend: N/A.
+
+[x] Task 26: Implement Registration Submission (Frontend)
+Frontend: In Register.cshtml.cs OnPostAsync, validate input. Call ApiClient POST to /api/v1/users/register. Handle success (redirect to Login) and errors (display message using TempData/ModelState + Tailwind alert).
+Backend: N/A.
+
+[x] Task 27: Create Login Page (Frontend - Form)
+Frontend: Create Pages/Account/Login.cshtml & Login.cshtml.cs. Add form (Email, Password, optional "Remember Me" checkbox) styled with Tailwind. Bind properties.
+Backend: N/A.
+
+[x] Task 28: Implement Login Submission (Frontend - Initial Token Handling)
+Frontend: In Login.cshtml.cs OnPostAsync, call ApiClient POST to /api/v1/login/access-token. Receive token (temporarily store or discard as cookie approach is next). Handle errors with Tailwind alerts.
+Backend: N/A.
+
+[ ] Task 29: Modify Login Endpoint for HTTP-Only Cookie (Backend)
+Frontend: N/A.
+Backend: Modify POST /api/v1/login/access-token. Accept optional remember_me: bool. Create JWT with standard or longer expiry based on remember_me. Create Response object. Use response.set_cookie() with key access_token, value, httponly=True, samesite='lax', secure=False (for local dev), set cookie expires if remember_me. Return success message/user info (not token) in body.
+
+[ ] Task 30: Update Frontend Login to Expect Cookie (Frontend)
+Frontend: Modify Login.cshtml.cs OnPostAsync. Send remember_me flag if checked. Expect success response (not token body). Redirect to a protected page (e.g., /Dashboard) on success.
+Backend: N/A.
+
+[ ] Task 31: Update get_current_user Dependency for Cookie (Backend)
+Frontend: N/A.
+Backend: Modify dependencies.py. Change get_current_user to accept request: Request. Read token from request.cookies.get("access_token"). If missing or invalid/expired, raise HTTPException(401). Remove OAuth2PasswordBearer. Keep user lookup and active check.
+
+[ ] Task 32: Test Cookie Authentication Flow (Manual)
+Frontend: Register. Login (check browser cookies). Access /api/v1/users/me endpoint via a test page or directly (should work).
+Backend: Ensure /users/me works with cookie.
+
+[ ] Task 33: Implement Logout Endpoint (Backend - Clear Cookie)
+Frontend: N/A.
+Backend: Add POST /api/v1/login/logout endpoint. Create Response, call response.delete_cookie("access_token"), return response.
+
+[ ] Task 34: Implement Logout Functionality (Frontend)
+Frontend: Add Logout button (conditional display). Create Pages/Account/Logout.cshtml & Logout.cshtml.cs. OnPostAsync calls ApiClient POST to /api/v1/login/logout. Redirect to Login page.
+
+[ ] Task 35: Implement Role-Based Dependencies (Backend)
+Frontend: N/A.
+Backend: In dependencies.py, create get_current_active_user (depends on get_current_user, just returns or raises 401 if inactive/not found). Create get_current_active_admin_user (depends on get_current_active_user, checks user.role == 'admin', raises 403 if not).
+
+[ ] Task 36: Seed Initial Admin User (Backend)
+Frontend: N/A.
+Backend: Create script or manually use crud_user.create_user to insert an admin user with a known password (hashed) and 'admin' role.
+
+[ ] Task 37: Create Frontend Authentication Service
+Frontend: Create Services/AuthService.cs. Inject IHttpContextAccessor. Add methods: IsUserLoggedInAsync (checks if /api/v1/users/me succeeds via ApiClient), GetUserDetailsAsync (calls /api/v1/users/me), GetCurrentUserId(), IsAdminAsync(). Cache results per request. Register service.
+Backend: N/A.
+
+[ ] Task 38: Update Layout for Auth State (Frontend)
+Frontend: Inject AuthService into _Layout.cshtml. Use @if (await AuthService.IsUserLoggedInAsync()) to show/hide Login/Register vs Logout/User Info/Admin links. Display user name. Style user area with Tailwind.
+Backend: N/A.
+
+[ ] Task 39: Secure Frontend Pages & Configure Paths
+Frontend: Create dummy Pages/Dashboard.cshtml. Apply [Authorize] attribute (or policy). In Program.cs, configure LoginPath = "/Account/Login", LogoutPath = "/Account/Logout", AccessDeniedPath = "/Account/AccessDenied". Add authorization services/policies if needed.
+Backend: N/A.
+
+[ ] Task 40: Create Access Denied Page (Frontend)
+Frontend: Create Pages/Account/AccessDenied.cshtml. Add user-friendly message styled with Tailwind.
+Backend: N/A.
+
+[ ] Task 41: Refine Registration/Login Validation & Feedback
+Frontend: Use asp-validation-for / asp-validation-summary on Register/Login forms. Map backend 422/401 errors from ApiClient to ModelState in PageModels for display. Style error messages with Tailwind (text-red-600).
+Backend: Ensure Pydantic validation (email format, required fields) is active. Provide clear 401 messages from login endpoint.
+
+[ ] Task 42: Test Role Protection (Manual)
+Frontend: Log in as non-admin. Try accessing an admin-only page/endpoint (create dummy if needed). Verify Access Denied. Log in as admin, verify access.
+Backend: Test admin-protected API endpoints with non-admin cookie. Expect 403.
+
+[ ] Task 43: Test Token Expiration (Manual)
+Frontend: Set short token expiry (1 min) in backend config. Log in. Wait. Try accessing protected resource. Verify redirect to Login.
+Backend: N/A. Reset expiry time.
+
+[ ] Task 44: Add Basic Rate Limiting (Backend - Optional)
+Frontend: N/A.
+Backend: Use slowapi to add basic rate limiting (e.g., in-memory) to the login endpoint (/api/v1/login/access-token).
+
+[ ] Task 45: Commit Authentication Module
+Frontend: N/A. git add ., git commit -m "feat: Implement JWT cookie authentication and role handling"
+Backend: N/A. git add ., git commit -m "feat: Implement JWT cookie authentication and role handling"
+
+Phase 3: Customer CRUD & Linking (Tasks 46-75)
+
+[ ] Task 46: Define Customer Model & Schemas (Backend)
+Frontend: N/A.
+Backend: Create models/customer.py (Customer: id, names, email, phone, address, timestamps, owner_id FK, company_id FK - nullable initially). Create schemas/customer.py (CustomerBase, CustomerCreate, CustomerUpdate, CustomerInDB, Customer - includes owner/company info). Add relationships in models (owner, company). Configure ORM mode.
+
+[ ] Task 47: Add Customer Table Migration
+Frontend: N/A.
+Backend: Update imports. alembic revision --autogenerate -m "Add customer table". Review. alembic upgrade head.
+
+[ ] Task 48: Create Customer CRUD Operations (Backend)
+Frontend: N/A.
+Backend: Create crud/crud_customer.py. Implement create_customer (sets owner), get_customer, get_customers (filters by owner, adds pagination/search/filter params later), update_customer, delete_customer. Include ownership checks. Add function get_customers_by_company.
+
+[ ] Task 49: Create Customer API Endpoints (Backend - GETs)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/customers.py router. Add GET / (list user's customers, pagination). Add GET /{customer_id} (get specific customer). Protect with Depends(get_current_active_user). Verify ownership in GET by ID. Return list[schemas.Customer] or schemas.Customer.
+
+[ ] Task 50: Create Customer API Endpoints (Backend - CUD)
+Frontend: N/A.
+Backend: In customers.py, add POST / (create). Add PUT /{customer_id} (update). Add DELETE /{customer_id} (delete). Protect, verify ownership for update/delete. Use relevant schemas (CustomerCreate, CustomerUpdate). Return created/updated schemas.Customer or 204.
+
+[ ] Task 51: Create Customer List Page (Frontend - Fetch & Display)
+Frontend: Create Pages/Customers/Index.cshtml & Index.cshtml.cs. In OnGetAsync, call ApiClient for GET /api/v1/customers. Store in public List<CustomerViewModel> Customers { get; set; }. Display in Tailwind styled table (Name, Email, Phone, Company). Handle empty state (text-center py-10 text-gray-500). Add "Create" button (bg-blue-500...) linking to ./Create.
+Backend: N/A.
+
+[ ] Task 52: Create "Create Customer" Page (Frontend - Form & Submit)
+Frontend: Create Pages/Customers/Create.cshtml & Create.cshtml.cs. Add form (fields matching CustomerCreate) styled with Tailwind. Bind [BindProperty] public CustomerCreateModel Customer { get; set; }. In OnPostAsync, check ModelState, call ApiClient POST to /api/v1/customers. Redirect to ./Index on success. Handle errors with validation display.
+Backend: N/A.
+
+[ ] Task 53: Create "Customer Details" Page (Frontend - Fetch, Display, Delete)
+Frontend: Create Pages/Customers/Details.cshtml & Details.cshtml.cs. Add "Edit" button link (./Edit/{id}). Add Delete button form (method=post, asp-page-handler="Delete", confirmation JS). In OnGetAsync(id), fetch customer via ApiClient GET /api/v1/customers/{id}. Store in CustomerViewModel Customer. Display details using Tailwind (dl, dt, dd or divs). Handle 404/403. Implement OnPostDeleteAsync(id) calling ApiClient DELETE, redirecting to Index.
+Backend: N/A.
+
+[ ] Task 54: Create "Edit Customer" Page (Frontend - Fetch, Form, Submit)
+Frontend: Create Pages/Customers/Edit.cshtml & Edit.cshtml.cs. Add [BindProperty] public CustomerUpdateModel Customer { get; set; }. In OnGetAsync(id), fetch customer, populate Customer. Create form similar to Create, styled, pre-filled. In OnPostAsync(id), check ModelState, call ApiClient PUT to /api/v1/customers/{id}. Redirect to ./Details on success. Handle errors. Handle 404/403.
+
+[ ] Task 55: Add Navigation Link & Page Titles (Frontend - Customer)
+Frontend: Add "Customers" link to _Layout.cshtml (visible when logged in). Set @ViewData["Title"] appropriately in Customer PageModels (List, Create, Details, Edit).
+Backend: N/A.
+
+[ ] Task 56: Define Company Model & Schemas (Backend)
+Frontend: N/A.
+Backend: Create models/company.py (Company: id, name, website, address, timestamps, owner_id FK). Create schemas/company.py (CompanyBase, CompanyCreate, CompanyUpdate, CompanyInDB, Company - includes owner/customers). Add relationships (owner, customers). Configure ORM mode.
+
+[ ] Task 57: Add Company Table & Customer FK Migration
+Frontend: N/A.
+Backend: Update models/customer.py to uncomment/add company_id = Column(Integer, ForeignKey("companies.id"), nullable=True). Update imports. alembic revision --autogenerate -m "Add company table and link to customer". Review. alembic upgrade head.
+
+[ ] Task 58: Create Company CRUD Operations (Backend)
+Frontend: N/A.
+Backend: Create crud/crud_company.py with create_company, get_company, get_companies (by owner, pagination), update_company, delete_company. Ensure ownership checks.
+
+[ ] Task 59: Create Company API Endpoints (Backend - GETs)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/companies.py router. Add GET / (list). Add GET /{company_id} (details). Add GET /{company_id}/customers (list associated customers). Protect, verify ownership. Return appropriate schemas.
+
+[ ] Task 60: Create Company API Endpoints (Backend - CUD)
+Frontend: N/A.
+Backend: In companies.py, add POST /, PUT /{company_id}, DELETE /{company_id}. Protect, verify ownership. Use schemas. Return data or 204.
+
+[ ] Task 61: Create Company List Page (Frontend - Fetch & Display)
+Frontend: Create Pages/Companies/Index.cshtml & Index.cshtml.cs. Fetch companies (GET /api/v1/companies). Display in Tailwind table (Name, Website). Handle empty state. Add "Create" button.
+Backend: N/A.
+
+[ ] Task 62: Create "Create Company" Page (Frontend - Form & Submit)
+Frontend: Create Pages/Companies/Create.cshtml & Create.cshtml.cs. Add form (Name, Website, Address). Bind model. OnPostAsync calls ApiClient POST to /api/v1/companies. Redirect to Index. Handle errors.
+Backend: N/A.
+
+[ ] Task 63: Create "Company Details" Page (Frontend - Fetch, Display, Delete)
+Frontend: Create Pages/Companies/Details.cshtml & Details.cshtml.cs. Add Edit/Delete buttons/forms. OnGetAsync fetches company details (GET /api/v1/companies/{id}). Display info. OnPostDeleteAsync calls ApiClient DELETE. Handle 404/403.
+Backend: N/A.
+
+[ ] Task 64: Create "Edit Company" Page (Frontend - Fetch, Form, Submit)
+Frontend: Create Pages/Companies/Edit.cshtml & Edit.cshtml.cs. OnGetAsync fetches company, populates bound model. Create pre-filled form. OnPostAsync calls ApiClient PUT. Redirect to Details. Handle errors. Handle 404/403.
+Backend: N/A.
+
+[ ] Task 65: Add Navigation Link & Page Titles (Frontend - Company)
+Frontend: Add "Companies" link to _Layout.cshtml. Set @ViewData["Title"] in Company PageModels.
+Backend: N/A.
+
+[ ] Task 66: Update Customer CRUD for Company Link (Backend)
+Frontend: N/A.
+Backend: Modify crud_customer.create_customer and update_customer to accept and save company_id. Ensure the company exists and belongs to the same owner.
+
+[ ] Task 67: Update Customer Schemas for Company Link (Backend)
+Frontend: N/A.
+Backend: Ensure company_id is in CustomerBase, Create, Update. Ensure company: schemas.Company | None is in Customer response schema. Update Company schema to include customers: list[schemas.Customer] = [].
+
+[ ] Task 68: Update Customer Forms for Company Selection (Frontend)
+Frontend: In Customers/Create.cshtml.cs and Edit.cshtml.cs (OnGetAsync), fetch the user's companies (GET /api/v1/companies). Store as List<SelectListItem> AvailableCompanies. In Create.cshtml and Edit.cshtml, add <select asp-for="Customer.CompanyId" asp-items="@Model.AvailableCompanies"> with a "None" option. Style with Tailwind.
+Backend: N/A.
+
+[ ] Task 69: Display Company Link on Customer Details (Frontend)
+Frontend: On Customers/Details.cshtml, if Customer.CompanyId exists, display the company name as a link to /Companies/Details/{CompanyId}. Requires CompanyName in CustomerViewModel.
+Backend: Ensure GET /api/v1/customers/{id} populates the nested company data.
+
+[ ] Task 70: Display Associated Customers on Company Details (Frontend)
+Frontend: On Companies/Details.cshtml.cs OnGetAsync, fetch associated customers (GET /api/v1/companies/{id}/customers). Store in List<CustomerViewModel> AssociatedCustomers. Display this list (Name, Email) using Tailwind.
+Backend: N/A.
+
+[ ] Task 71: Implement Consistent Form Styling & Validation Feedback
+Frontend: Use shared partials or consistent Tailwind classes for forms (Customer, Company, User). Ensure asp-validation-for/summary display mapped backend errors correctly. Style inputs, labels, buttons consistently.
+Backend: Ensure backend validation (required fields, email format) is active.
+
+[ ] Task 72: Test Customer & Company CRUD (Manual)
+Frontend: Create, view, edit, delete customers and companies. Verify data persistence and display. Test error handling (validation, not found, forbidden).
+Backend: N/A.
+
+[ ] Task 73: Test Customer-Company Linking (Manual)
+Frontend: Link customers to companies via Create/Edit forms. Verify links appear on details pages. Verify associated customers list on company details. Test unlinking.
+Backend: N/A.
+
+[ ] Task 74: Handle Cascade Deletes or Unlinking (Backend Decision & Implementation)
+Frontend: N/A.
+Backend: Decide: Should deleting a Company delete its Customers? Or set customer.company_id to NULL? Implement the chosen logic. If cascading, add cascade="all, delete-orphan" to Company.customers relationship and passive_deletes=True to Customer.company_id ForeignKey. If unlinking, update crud_company.delete_company to find and update associated customers first. Apply migrations if schema changes. Caution with cascades.
+
+[ ] Task 75: Commit Customer & Company Modules
+Frontend: N/A. git add ., git commit -m "feat: Implement Customer and Company CRUD with linking"
+Backend: N/A. git add ., git commit -m "feat: Implement Customer and Company CRUD with linking"
+
+Phase 4: Notes & Interactions (Tasks 76-95)
+
+[ ] Task 76: Define Note Model & Schemas (Backend)
+Frontend: N/A.
+Backend: Create models/note.py (Note: id, content(Text), timestamps, owner_id, customer_id FK, company_id FK). Add relationships (owner, customer, company). Add check constraint (customer XOR company). Create schemas/note.py (NoteBase, NoteCreate (with validator), NoteUpdate, NoteInDB, Note). Configure ORM mode.
+
+[ ] Task 77: Add Note Table Migration
+Frontend: N/A.
+Backend: Update imports. alembic revision --autogenerate -m "Add note table". Review. alembic upgrade head.
+
+[ ] Task 78: Create Note CRUD Operations (Backend)
+Frontend: N/A.
+Backend: Create crud/crud_note.py. Implement create_note, get_note, get_notes_by_customer (ordered desc), get_notes_by_company (ordered desc), update_note, delete_note. Include ownership checks and verify linked customer/company belongs to user.
+
+[ ] Task 79: Create Note API Endpoints (Backend)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/notes.py. Add POST / (create). Add GET /customer/{customer_id}. Add GET /company/{company_id}. Add PUT /{note_id}. Add DELETE /{note_id}. Protect, verify ownership. Use CRUD functions.
+
+[ ] Task 80: Fetch & Display Notes on Customer Details (Frontend)
+Frontend: In Customers/Details.cshtml.cs OnGetAsync, fetch notes (GET /api/v1/notes/customer/{id}). Store in List<NoteViewModel> Notes. In Details.cshtml, render notes list (content, timestamp) using Tailwind cards (bg-gray-50 p-3 rounded mb-3).
+Backend: N/A.
+
+[ ] Task 81: Fetch & Display Notes on Company Details (Frontend)
+Frontend: In Companies/Details.cshtml.cs OnGetAsync, fetch notes (GET /api/v1/notes/company/{id}). Store and render similarly on Details.cshtml.
+Backend: N/A.
+
+[ ] Task 82: Create Reusable "Add Note" Form Partial (Frontend)
+Frontend: Create Pages/Shared/_AddNoteForm.cshtml. Include <textarea asp-for="Content"> and hidden fields for CustomerId/CompanyId. Style with Tailwind. Back with NoteCreateModel.
+Backend: N/A.
+
+[ ] Task 83: Integrate Add Note Form on Customer Details (Frontend)
+Frontend: On Customers/Details.cshtml, include partial inside <form method="post" asp-page-handler="AddNote">. Bind [BindProperty] NoteCreateModel NewNote. Pre-fill CustomerId in OnGetAsync. Implement OnPostAddNoteAsync(id): check ModelState, set CustomerId, call ApiClient POST to /api/v1/notes, redirect back to Details page. Handle errors.
+Backend: N/A.
+
+[ ] Task 84: Integrate Add Note Form on Company Details (Frontend)
+Frontend: On Companies/Details.cshtml, include partial in form (asp-page-handler="AddNote"). Bind NewNote. Pre-fill CompanyId. Implement OnPostAddNoteAsync(id): check ModelState, set CompanyId, call ApiClient POST, redirect. Handle errors.
+Backend: N/A.
+
+[ ] Task 85: Add Delete Button/Form for Notes (Frontend - Customer Details)
+Frontend: In notes loop on Customers/Details.cshtml, add small form/button: method=post, asp-page-handler="DeleteNote", asp-route-noteId, asp-route-id (customer id), confirmation JS. Style (text-red-500 text-xs).
+Backend: N/A.
+
+[ ] Task 86: Implement Note Deletion Logic (Frontend - Customer Details)
+Frontend: In Customers/Details.cshtml.cs, add OnPostDeleteNoteAsync(int id, int noteId). Call ApiClient DELETE /api/v1/notes/{noteId}. Redirect back to Details page on success. Handle errors.
+Backend: N/A.
+
+[ ] Task 87: Add Delete Button/Form for Notes (Frontend - Company Details)
+Frontend: Add similar delete form/button within notes loop on Companies/Details.cshtml, ensuring asp-route-id is the company ID.
+Backend: N/A.
+
+[ ] Task 88: Implement Note Deletion Logic (Frontend - Company Details)
+Frontend: In Companies/Details.cshtml.cs, add OnPostDeleteNoteAsync(int id, int noteId). Call ApiClient DELETE. Redirect back on success.
+Backend: N/A.
+
+[ ] Task 89: Refine Note Display & Validation
+Frontend: Ensure multi-line notes display correctly (whitespace-pre-wrap). Use asp-validation-for on note textarea. Style validation.
+Backend: Ensure note content is required in schema. Add cascade delete behavior from Customer/Company to Note (update relationships/FKs, migrate).
+
+[ ] Task 90: Index Note Foreign Keys (Backend)
+Frontend: N/A.
+Backend: Ensure owner_id, customer_id, company_id in Note model are indexed (index=True). Add migration if needed.
+
+[ ] Task 91: Test Adding Notes (Manual)
+Frontend: Add notes to both customers and companies. Verify they appear correctly ordered.
+Backend: N/A.
+
+[ ] Task 92: Test Deleting Notes (Manual)
+Frontend: Delete notes from customer/company pages. Verify removal.
+Backend: N/A.
+
+[ ] Task 93: Test Note Ownership (Manual)
+Frontend: Verify users cannot see/delete notes attached to other users' customers/companies.
+Backend: Test API directly with wrong user tokens. Expect 403/404.
+
+[ ] Task 94: Test Note Cascade Delete (Manual)
+Frontend: Delete a customer or company that has notes. Verify the notes are also deleted (check UI and/or DB). Requires cascade setup in Task 89.
+Backend: N/A.
+
+[ ] Task 95: Commit Notes Module
+Frontend: N/A. git add ., git commit -m "feat: Implement Notes functionality"
+Backend: N/A. git add ., git commit -m "feat: Implement Notes functionality"
+
+Phase 5: File Uploads (Tasks 96-115)
+
+[ ] Task 96: Define File Model & Schemas (Backend)
+Frontend: N/A.
+Backend: Create models/file.py (File: id, filename, filepath, content_type, size, timestamps, owner_id, customer_id FK, company_id FK). Add relationships/check constraint. Create schemas/file.py (FileBase, FileCreate, FileInDB, File). Configure ORM mode. Ensure UPLOAD_DIR is in config.
+
+[ ] Task 97: Add File Table Migration
+Frontend: N/A.
+Backend: Update imports. alembic revision --autogenerate -m "Add file table". Review. alembic upgrade head.
+
+[ ] Task 98: Create File CRUD Operations (Backend - DB Records Only)
+Frontend: N/A.
+Backend: Create crud/crud_file.py. Implement create_file_record (stores metadata), get_file (by id/owner), get_files_by_customer, get_files_by_company, delete_file_record. Include ownership checks.
+
+[ ] Task 99: Create File Upload Endpoints (Backend - Customer & Company)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/files.py. Add POST /upload/customer/{customer_id} and POST /upload/company/{company_id}. Accept file: UploadFile. Protect, verify owner. Generate unique path in UPLOAD_DIR. Save file safely (sanitize name, use chunks/copyfileobj). Create DB record via crud_file. Return schemas.File. Handle filesystem errors.
+
+[ ] Task 100: Implement File Upload Validation (Backend)
+Frontend: N/A.
+Backend: In upload endpoints, add checks for file size (file.size vs MAX_FILE_SIZE config) and content type (file.content_type vs allowed list config). Raise HTTPException (413/400) if invalid.
+
+[ ] Task 101: Create File Download Endpoint (Backend)
+Frontend: N/A.
+Backend: In files.py, add GET /download/{file_id}. Protect, verify owner via crud_file.get_file. Return FileResponse using stored filepath, filename, content_type.
+
+[ ] Task 102: Create File Deletion Endpoint (Backend - DB & Filesystem)
+Frontend: N/A.
+Backend: In files.py, add DELETE /{file_id}. Protect, verify owner (crud_file.get_file). Get filepath. Delete file (os.remove). If successful, delete DB record (crud_file.delete_file_record). Handle errors. Return 204.
+
+[ ] Task 103: Fetch & Display Files on Customer Details (Frontend)
+Frontend: In Customers/Details.cshtml.cs, fetch files (GET /api/v1/files/customer/{id} - create this backend endpoint using crud_file). Store in List<FileViewModel> Files. Render list in Details.cshtml with download links (/api/v1/files/download/{id}), filename, size (human-readable), date. Style with Tailwind.
+Backend: Implement GET /api/v1/files/customer/{customer_id} endpoint.
+
+[ ] Task 104: Fetch & Display Files on Company Details (Frontend)
+Frontend: Repeat Task 103 for Company Details page, fetching from /api/v1/files/company/{id}.
+Backend: Implement GET /api/v1/files/company/{company_id} endpoint.
+
+[ ] Task 105: Create Reusable "Upload File" Form Partial (Frontend)
+Frontend: Create Pages/Shared/_UploadFileForm.cshtml. Include <input type="file" name="file"> and submit button. Style with Tailwind. Remember parent form needs enctype="multipart/form-data".
+Backend: N/A.
+
+[ ] Task 106: Integrate Upload File Form on Customer Details (Frontend)
+Frontend: On Customers/Details.cshtml, include partial in form (method=post, asp-page-handler="UploadFile", enctype, asp-route-id). Implement OnPostUploadFileAsync(int id, IFormFile file) in Details.cshtml.cs. Check file. Call ApiClient.PostFileAsync to POST /api/v1/files/upload/customer/{id}. Redirect back. Handle errors (including size/type validation feedback).
+Backend: N/A.
+
+[ ] Task 107: Integrate Upload File Form on Company Details (Frontend)
+Frontend: Repeat Task 106 for Company Details page, posting to /api/v1/files/upload/company/{id}.
+Backend: N/A.
+
+[ ] Task 108: Add Delete Button/Form for Files (Frontend - Customer Details)
+Frontend: In files loop on Customers/Details.cshtml, add form/button (method=post, asp-page-handler="DeleteFile", asp-route-fileId, asp-route-id, confirmation JS). Style (text-red-500).
+Backend: N/A.
+
+[ ] Task 109: Implement File Deletion Logic (Frontend - Customer Details)
+Frontend: In Customers/Details.cshtml.cs, add OnPostDeleteFileAsync(int id, int fileId). Call ApiClient DELETE /api/v1/files/{fileId}. Redirect back on success. Handle errors.
+Backend: N/A.
+
+[ ] Task 110: Add Delete Button/Form for Files (Frontend - Company Details)
+Frontend: Add similar delete form/button to files loop on Companies/Details.cshtml.
+Backend: N/A.
+
+[ ] Task 111: Implement File Deletion Logic (Frontend - Company Details)
+Frontend: In Companies/Details.cshtml.cs, add OnPostDeleteFileAsync(int id, int fileId). Call ApiClient DELETE. Redirect back.
+Backend: N/A.
+
+[ ] Task 112: Index File Foreign Keys & Handle Cascade (Backend)
+Frontend: N/A.
+Backend: Ensure file FKs are indexed. Add cascade delete behavior from Customer/Company to File (update relationships/FKs, migrate) so deleting parent cleans up file records (and potentially files via logic in delete endpoints or separate cleanup).
+
+[ ] Task 113: Test File Upload/Download/Delete (Manual)
+Frontend: Upload files for customers/companies. Verify display, download works. Delete files. Verify removal.
+Backend: Check UPLOAD_DIR and DB for file presence/absence.
+
+[ ] Task 114: Test File Validation (Manual)
+Frontend: Try uploading too large / disallowed type files. Verify error feedback.
+Backend: N/A.
+
+[ ] Task 115: Commit File Uploads Module
+Frontend: N/A. git add ., git commit -m "feat: Implement file uploads and management"
+Backend: N/A. git add ., git commit -m "feat: Implement file uploads and management"
+
+Phase 6: Admin Dashboard & User Management (Tasks 116-140)
+
+[ ] Task 116: Create Admin Dashboard Page & Stats Endpoint (Backend)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/admin.py. Add GET /stats endpoint, protected by get_current_active_admin_user. Calculate totals (users, customers, companies, notes) using CRUD count functions. Return AdminStats schema.
+
+[ ] Task 117: Implement Admin Stat Calculation & Schema (Backend)
+Frontend: N/A.
+Backend: Add count methods to relevant CRUD files (or crud_admin.py). Define schemas/admin.py with AdminStats Pydantic model.
+
+[ ] Task 118: Create Admin Dashboard Page (Frontend - Display Stats)
+Frontend: Create Pages/Admin/Index.cshtml & Index.cshtml.cs. Protect with admin role ([Authorize(Roles = "admin")]). In OnGetAsync, fetch stats from GET /api/v1/admin/stats. Display using Tailwind stat cards (grid, bg-white shadow rounded p-4). Handle fetch errors. Add "User Management" link (./Users).
+Backend: N/A.
+
+[ ] Task 119: Add Admin Link & Role Check in Layout (Frontend)
+Frontend: In _Layout.cshtml, add link to /Admin visible only if AuthService.IsAdminAsync() is true. Update AuthService if needed to expose role/admin status.
+Backend: Ensure /api/v1/users/me returns role info.
+
+[ ] Task 120: Create User List Endpoint (Backend - Admin)
+Frontend: N/A.
+Backend: In users.py, add GET / endpoint (admin only). Call crud_user.get_users (no passwords). Add pagination. Return list[schemas.User].
+
+[ ] Task 121: Create User List Page (Frontend - Admin)
+Frontend: Create Pages/Admin/Users/Index.cshtml & Index.cshtml.cs. Protect (admin). Fetch users (GET /api/v1/users). Display in Tailwind table (Name, Email, Role, Active). Add "Create User" button.
+Backend: N/A.
+
+[ ] Task 122: Create User Endpoint (Backend - Admin)
+Frontend: N/A.
+Backend: In users.py, add POST / endpoint (admin only). Accept schemas.UserCreateAdmin (includes password, role, active). Call crud_user.create_user. Return schemas.User. Define UserCreateAdmin schema.
+
+[ ] Task 123: Create "Create User" Page (Frontend - Admin)
+Frontend: Create Pages/Admin/Users/Create.cshtml & Create.cshtml.cs. Protect (admin). Add form (Email, Name, Password, Role dropdown, Active checkbox). Bind model. OnPostAsync calls ApiClient POST /api/v1/users. Redirect to User List. Handle errors.
+Backend: N/A.
+
+[ ] Task 124: Create Get/Update User Endpoints (Backend - Admin)
+Frontend: N/A.
+Backend: In users.py, add GET /{user_id} (admin only). Add PUT /{user_id} (admin only). Accept schemas.UserUpdateAdmin (all fields optional, incl. password). Fetch user, call crud_user.update_user (hash password if provided). Implement self-update prevention (no deactivating self, no changing own role from admin). Return schemas.User. Define UserUpdateAdmin schema.
+
+[ ] Task 125: Create "Edit User" Page (Frontend - Admin)
+Frontend: Create Pages/Admin/Users/Edit.cshtml & Edit.cshtml.cs. Protect (admin). OnGetAsync fetches user (GET /api/v1/users/{id}), populates bound model (no password). Create form (Name, Email, Role, Active, optional Password). Disable Role/Active if editing self. OnPostAsync calls ApiClient PUT /api/v1/users/{id}. Redirect to User List. Handle errors.
+Backend: N/A.
+
+[ ] Task 126: Create Delete User Endpoint (Backend - Admin)
+Frontend: N/A.
+Backend: In users.py, add DELETE /{user_id} (admin only). Fetch user. Prevent self-delete. Call crud_user.delete_user. Return 204. Consider related data cascade/orphan handling (depends on FK setup).
+
+[ ] Task 127: Add Delete User Button/Logic (Frontend - Admin User List)
+Frontend: In Admin/Users/Index.cshtml table, add Delete form/button per user (hide/disable for self). Add confirmation JS. Implement OnPostDeleteAsync(int id) in Index.cshtml.cs, calling ApiClient DELETE /api/v1/users/{id}. Redirect back on success. Handle errors.
+Backend: N/A.
+
+[ ] Task 128: Test Admin Dashboard Access (Manual)
+Frontend: Log in as admin/non-admin. Verify dashboard visibility/access and API protection. Check stats display.
+Backend: N/A.
+
+[ ] Task 129: Test User Creation (Admin) (Manual)
+Frontend: As admin, create a new user (user/admin role). Verify they appear in list. Log in as new user.
+Backend: N/A.
+
+[ ] Task 130: Test User Editing (Admin) (Manual)
+Frontend: As admin, edit a user (not self). Change details (role, active, password). Verify changes and login.
+Backend: N/A.
+
+[ ] Task 131: Test User Deletion (Admin) (Manual)
+Frontend: As admin, delete a user (not self). Verify removal. Verify login fails. Check related data handling.
+Backend: N/A.
+
+[ ] Task 132: Test Admin Self-Edit/Delete Restrictions (Manual)
+Frontend: As admin, attempt to disable own account, change own role via Edit page. Attempt to delete self from list. Verify actions are blocked/UI elements disabled.
+Backend: Test API endpoints directly for 403 on forbidden self-actions.
+
+[ ] Task 133: Add Basic Search/Filter to User List (Admin - Optional)
+Frontend: Add search input (email/name) and filters (role/active) to Admin/Users/Index.cshtml. Update PageModel to handle parameters and pass to ApiClient.
+Backend: Update GET /api/v1/users (admin) endpoint and crud_user.get_users to accept and apply search/filter parameters.
+
+[ ] Task 134: Refine User List Display (Admin - Badges)
+Frontend: Use Tailwind badges for Role (e.g., bg-blue-100 text-blue-800) and Active status (bg-green-100 text-green-800 / bg-red-100 text-red-800) in the user table for better readability.
+Backend: N/A.
+
+[ ] Task 135: Define Cascade Behavior for User Deletion (Backend)
+Frontend: N/A.
+Backend: Ensure FKs from Customer, Company, Note, File, Tag back to users.id have appropriate ondelete behavior defined (e.g., CASCADE or SET NULL). Add cascade="all, delete-orphan" to relationships in User model if cascade is desired. Update/apply migrations. Verify this aligns with DELETE /users/{id} logic.
+
+[ ] Task 136: Add Flash/Toast Messages for Admin Actions
+Frontend: Implement TempData messages (via a partial view like _StatusMessage.cshtml included in _Layout.cshtml) for success/error feedback after Admin user create/update/delete actions. Style with Tailwind alerts.
+Backend: N/A.
+
+[ ] Task 137: Ensure Admin Endpoints Use Admin Dependency
+Frontend: N/A.
+Backend: Double-check all endpoints in admin.py and admin-only endpoints in users.py use Depends(get_current_active_admin_user).
+
+[ ] Task 138: Review Security Considerations for User Management
+Frontend: N/A.
+Backend: Review endpoints for potential vulnerabilities (e.g., IDOR on user IDs, ensuring password hashes aren't exposed). Confirm self-action prevention logic.
+
+[ ] Task 139: Add Basic Logging for Admin Actions (Backend - Optional)
+Frontend: N/A.
+Backend: Add simple logging (import logging) within admin endpoints (create/update/delete users) to record actions performed by which admin.
+
+[ ] Task 140: Commit Admin Dashboard & User Management
+Frontend: N/A. git add ., git commit -m "feat: Implement Admin Dashboard and User Management"
+Backend: N/A. git add ., git commit -m "feat: Implement Admin Dashboard and User Management"
+
+Phase 7: Filtering, Search & Sorting (Tasks 141-160)
+
+[ ] Task 141: Add Search Form to Customer List (Frontend)
+Frontend: On Customers/Index.cshtml, add <form method="get"> containing <input type="search" name="searchTerm" value="@Model.SearchTerm"> and a submit button. Style with Tailwind. Add [BindProperty(SupportsGet = true)] string SearchTerm to PageModel.
+Backend: N/A.
+
+[ ] Task 142: Implement Customer Search (Backend)
+Frontend: N/A.
+Backend: Modify GET /api/v1/customers endpoint to accept search: str | None. Modify crud_customer.get_customers to add WHERE ... ILIKE :search condition (across name, email) if search is provided.
+
+[ ] Task 143: Pass Search Term & Display Status (Frontend - Customer List)
+Frontend: In Customers/Index.cshtml.cs OnGetAsync, pass SearchTerm to ApiClient. In Index.cshtml, display "Searching for: ..." and a "Clear Search" link (<a> to ./Index without params) if SearchTerm is active.
+Backend: N/A.
+
+[ ] Task 144: Add Search Form & Logic for Company List
+Frontend: Repeat Task 141 & 143 for Pages/Companies/Index.cshtml and its PageModel.
+Backend: Modify GET /api/v1/companies and crud_company.get_companies to handle search parameter (filter by name ILIKE).
+
+[ ] Task 145: Add Company Filter Dropdown to Customer List (Frontend)
+Frontend: In Customers/Index.cshtml form, add <select name="companyIdFilter" asp-items="@Model.CompanyFilterOptions"> with "All" option. In PageModel, add [BindProperty(SupportsGet = true)] int? CompanyIdFilter. Fetch user's companies in OnGetAsync to populate CompanyFilterOptions. Pass filter to ApiClient.
+Backend: N/A.
+
+[ ] Task 146: Implement Customer Filtering by Company (Backend)
+Frontend: N/A.
+Backend: Modify GET /api/v1/customers to accept company_id: int | None. Modify crud_customer.get_customers to filter by customer.company_id == :company_id if provided. Combine with search using and_.
+
+[ ] Task 147: Add Sorting Links to Customer List Headers (Frontend)
+Frontend: Make <th> elements (e.g., Name, Email) in Customers/Index.cshtml table links (<a>). Generate URLs with sort parameters (?sort=name_asc, ?sort=name_desc). Add sort direction indicators (e.g., ▲/▼).
+Backend: N/A.
+
+[ ] Task 148: Implement Customer Sorting Parameter Handling (Frontend)
+Frontend: In Customers/Index.cshtml.cs, add [BindProperty(SupportsGet = true)] string SortOrder { get; set; }. Pass SortOrder to ApiClient. Update link generation logic to toggle/set SortOrder.
+Backend: N/A.
+
+[ ] Task 149: Implement Customer Sorting (Backend)
+Frontend: N/A.
+Backend: Modify GET /api/v1/customers to accept sort: str | None. Modify crud_customer.get_customers to parse sort parameter (e.g., name_asc) and apply corresponding order_by() clause to the query. Define default sort order. Validate sort parameter.
+
+[ ] Task 150: Add Sorting Links & Logic for Company List (Optional)
+Frontend: Optionally repeat Tasks 147-148 for the Company list page (Index.cshtml, PageModel).
+Backend: Optionally repeat Task 149 for GET /api/v1/companies and crud_company.get_companies.
+
+[ ] Task 151: Ensure Filter/Search/Sort Values are Preserved (Frontend)
+Frontend: Verify that after submitting the GET form on list pages, the search input, filter dropdowns, and sort indicators correctly reflect the current state based on the PageModel properties bound with SupportsGet = true.
+Backend: N/A.
+
+[ ] Task 152: Test Customer Search, Filter, Sort (Manual)
+Frontend: Test searching for customers. Test filtering by company. Test sorting by different columns (asc/desc). Test combinations. Verify "Clear Search/Filter" works. Verify empty results message.
+Backend: N/A.
+
+[ ] Task 153: Test Company Search, Sort (Manual)
+Frontend: Test searching and sorting on the Company list page.
+Backend: N/A.
+
+[ ] Task 154: Consider Database Indexing for Performance
+Frontend: N/A.
+Backend: Review fields used in WHERE (customer.email, names, company_id, company.name) and ORDER BY clauses. Ensure appropriate DB indexes exist using Alembic migrations (index=True). Note limitations of ILIKE with leading wildcards on standard SQLite indexes.
+
+[ ] Task 155: Refine Empty State Messages for Filters/Search
+Frontend: Update the "No customers/companies found" messages on list pages to be more specific when filters or search terms are active (e.g., "No customers found matching '{searchTerm}'").
+Backend: N/A.
+
+[ ] Task 156: Standardize List Endpoint Query Parameters (Backend)
+Frontend: N/A.
+Backend: Ensure consistency across all list endpoints (GET /customers, /companies, /users, etc.) for parameters like skip, limit, search, sort, and any specific filters.
+
+[ ] Task 157: Improve Table Header Styling for Sorting (Frontend)
+Frontend: Add Tailwind classes to make sortable table headers look clickable (hover:bg-gray-100 cursor-pointer). Ensure sort direction indicators are clear.
+Backend: N/A.
+
+[ ] Task 158: Add Pagination Controls (Frontend - Basic Numbered Links)
+Frontend: On list pages (Customers, Companies, Users), if total count > limit, display pagination links. Requires API to return total count. Calculate total pages. Show links for Prev, Next, and page numbers. Update PageModel OnGetAsync to handle page parameter, calculate skip. Pass page in links. Style with Tailwind.
+Backend: Modify list endpoints (GET /...) and corresponding CRUD functions to accept skip/limit, calculate total item count for the query, and return both items: list[...] and total: int in a wrapper schema (e.g., CustomerListResponse).
+
+[ ] Task 159: Implement Backend Response Model for Paginated Lists
+Frontend: N/A.
+Backend: Create generic or specific Pydantic response models (e.g., schemas.customer.CustomerListResponse) containing items: list[Customer] and total: int. Update list endpoints to return these models.
+
+[ ] Task 160: Commit Filtering/Search/Sort/Pagination
+Frontend: N/A. git add ., git commit -m "feat: Implement search, filtering, sorting, and pagination"
+Backend: N/A. git add ., git commit -m "feat: Implement search, filtering, sorting, and pagination"
+
+Phase 8: Tags & Segmentation (Tasks 161-180)
+
+[ ] Task 161: Define Tag Model & Association Tables (Backend)
+Frontend: N/A.
+Backend: Create models/tag.py (Tag: id, name, color, owner_id FK, unique(name, owner)). Create customer_tags and company_tags association tables (Table(...)). Add relationships (tags <-> customers, tags <-> companies) using secondary argument in models/customer.py, models/company.py, models/tag.py.
+
+[ ] Task 162: Add Tag Models & Associations Migration
+Frontend: N/A.
+Backend: Update imports. alembic revision --autogenerate -m "Add tags and associations". Review/adjust. alembic upgrade head.
+
+[ ] Task 163: Define Tag Schema & Update Related Schemas (Backend)
+Frontend: N/A.
+Backend: Create schemas/tag.py (TagBase, TagCreate, TagUpdate, Tag). Update schemas.Customer and schemas.Company to include tags: list[schemas.Tag] = []. Configure ORM mode.
+
+[ ] Task 164: Create Tag CRUD Operations (Backend)
+Frontend: N/A.
+Backend: Create crud/crud_tag.py (create_tag, get_tag_by_name, get_tag, get_tags by owner, update_tag, delete_tag). Handle unique constraint.
+
+[ ] Task 165: Create Tag Management Endpoints (Backend - CRUD)
+Frontend: N/A.
+Backend: Create api/v1/endpoints/tags.py. Add POST /, GET /, PUT /{tag_id}, DELETE /{tag_id}. Protect, use crud_tag.
+
+[ ] Task 166: Create Tag Association Endpoints (Backend - Customer/Company)
+Frontend: N/A.
+Backend: In customers.py, add POST /{customer_id}/tags/{tag_id} and DELETE /{customer_id}/tags/{tag_id}. In companies.py, add similar endpoints for companies. Protect, verify ownership of both parent and tag. Manipulate relationship lists (customer.tags.append(tag) / .remove(tag)).
+
+[ ] Task 167: Display Tags on Customer/Company Details (Frontend)
+Frontend: On Customers/Details.cshtml and Companies/Details.cshtml, render the item.Tags list. Use Tailwind badges (inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium). Use tag.Color for background if set.
+Backend: Ensure GET /customers/{id} and /companies/{id} endpoints populate the tags relationship correctly.
+
+[ ] Task 168: Create "Manage Tags" Component (Frontend - Customer Details)
+Frontend: On Customers/Details.cshtml, add section "Manage Tags". In OnGetAsync, fetch available tags (GET /api/v1/tags) and store in AvailableTags. Display multi-select or checkboxes bound to List<int> SelectedTagIds. Add form/button (method=post, asp-page-handler="ManageTags").
+Backend: N/A.
+
+[ ] Task 169: Implement "Save Tags" Logic (Frontend - Customer Details)
+Frontend: In Customers/Details.cshtml.cs, add OnPostManageTagsAsync(int id, List<int> selectedTagIds). Compare selectedTagIds with current tags. Call ApiClient POST/DELETE /customers/{id}/tags/{tag_id} for added/removed tags. Redirect back. Handle errors.
+Backend: N/A.
+
+[ ] Task 170: Create "Manage Tags" Component & Logic (Frontend - Company Details)
+Frontend: Repeat Tasks 168 & 169 for the Company Details page (Companies/Details.cshtml & .cs), calling the company tag association endpoints.
+Backend: N/A.
+
+[ ] Task 171: Add Filtering by Tag to Customer List (Frontend)
+Frontend: On Customers/Index.cshtml form, add <select name="tagFilter" asp-items="@Model.TagFilterOptions">. Fetch tags in OnGetAsync for TagFilterOptions. Bind [BindProperty(SupportsGet = true)] int? TagFilter. Pass to ApiClient.
+Backend: N/A.
+
+[ ] Task 172: Implement Customer Filtering by Tag (Backend)
+Frontend: N/A.
+Backend: Modify GET /api/v1/customers to accept tag_id: int | None. Modify crud_customer.get_customers to join customer_tags and filter if tag_id is provided.
+
+[ ] Task 173: Create Basic Tag Management Page (Frontend - Optional CRUD)
+Frontend: Create Pages/Settings/Tags.cshtml. Implement basic CRUD UI for tags (Create, List, Edit name/color, Delete) calling the /api/v1/tags endpoints. Style with Tailwind.
+Backend: N/A.
+
+[ ] Task 174: Handle Tag Deletion Cascade/Orphan Logic (Backend)
+Frontend: N/A.
+Backend: Decide what happens when a tag is deleted. Default: associated entries in customer_tags/company_tags should be deleted. Ensure FKs in association tables have ondelete="CASCADE". If not default, implement logic in crud_tag.delete_tag. Apply migrations.
+
+[ ] Task 175: Test Tag Creation & Management (Manual)
+Frontend: Create/edit/delete tags (via Settings page if built, or API directly).
+Backend: N/A.
+
+[ ] Task 176: Test Tagging Customers/Companies (Manual)
+Frontend: Assign/unassign tags via Details pages. Verify tags display correctly as badges.
+Backend: N/A.
+
+[ ] Task 177: Test Filtering by Tag (Manual)
+Frontend: Filter Customer list by assigned tags. Verify results are correct.
+Backend: N/A.
+
+[ ] Task 178: Test Tag Deletion Effects (Manual)
+Frontend: Delete a tag. Verify it's removed from management UI and no longer appears on associated customers/companies or in filter dropdowns.
+Backend: Check association tables in DB.
+
+[ ] Task 179: Refine Tag Badge Styling (Frontend)
+Frontend: Ensure tag badges are visually appealing, contrast is good if using background colors, and text is readable. Use consistent Tailwind sizing/padding.
+
+[ ] Task 180: Commit Tags Module
+Frontend: N/A. git add ., git commit -m "feat: Implement Tags and Segmentation"
+Backend: N/A. git add ., git commit -m "feat: Implement Tags and Segmentation"
+
+Phase 9: UI/UX Enhancements (Tasks 181-200)
+
+[ ] Task 181: Implement Consistent Page Layout and Headers
+Frontend: Review all main pages (Lists, Details, Create, Edit, Admin). Ensure consistent placement of titles, action buttons (Create, Edit, Save), and navigation links (Back to List). Use Tailwind flexbox/grid for layout.
+Backend: N/A.
+
+[ ] Task 182: Standardize Button Styling and Placement
+Frontend: Define primary (e.g., Save, Create - bg-blue-600), secondary (e.g., Cancel - bg-gray-200), and danger (e.g., Delete - bg-red-600) button styles using Tailwind. Apply consistently. Place primary actions typically to the right.
+Backend: N/A.
+
+[ ] Task 183: Improve Form Layout and Input Styling
+Frontend: Ensure adequate spacing between form fields, labels above inputs. Use consistent Tailwind classes for inputs (border rounded px-3 py-2 focus:ring...), textareas, selects. Ensure responsive behavior.
+Backend: N/A.
+
+[ ] Task 184: Enhance Table Styling
+Frontend: Refine Tailwind styling for all tables (min-w-full divide-y, thead bg-gray-50, th px-6 py-3 text-left..., td px-6 py-4 whitespace-nowrap...). Ensure hover effects (tbody tr:hover:bg-gray-50) and responsive handling (consider horizontal scroll on small screens).
+Backend: N/A.
+
+[ ] Task 185: Implement Flash/Toast Messages Consistently
+Frontend: Ensure the _StatusMessage.cshtml partial (or similar mechanism using TempData) is used effectively after all CUD operations (Customers, Companies, Notes, Files, Users, Tags) to provide clear success/error feedback. Style alerts appropriately (green/red).
+Backend: N/A.
+
+[ ] Task 186: Add Loading Indicators (Frontend - Optional Basic)
+Frontend: Consider adding a simple loading indicator (e.g., "Loading..." text or basic spinner) shown while ApiClient calls are in progress on list pages or detail pages fetching data. Can use simple JS or framework like Alpine.js/HTMX.
+Backend: N/A.
+
+[ ] Task 187: Improve Navigation Structure (Sidebar/Top Nav)
+Frontend: Refine the main navigation in _Layout.cshtml. Use Tailwind to create a clean sidebar or top navigation bar. Ensure links are clear and logically grouped (Dashboard, Customers, Companies, Settings, Admin). Highlight active section.
+Backend: N/A.
+
+[ ] Task 188: Format Dates and Times Consistently
+Frontend: Format all displayed CreatedAt, UpdatedAt timestamps consistently (e.g., yyyy-MM-dd HH:mm). Use C# formatting in ViewModels or Razor. Style subtly (text-xs text-gray-500).
+Backend: N/A.
+
+[ ] Task 189: Format Phone Numbers and Addresses
+Frontend: Apply consistent formatting for phone numbers (e.g., (XXX) XXX-XXXX) and ensure multi-line addresses display correctly (whitespace-pre-wrap) on details pages.
+Backend: N/A.
+
+[ ] Task 190: Make Website URLs Clickable and Styled
+Frontend: Ensure all website URLs (e.g., on Company list/details) are rendered as <a href="..." target="_blank" rel="noopener noreferrer"> and styled distinctively (text-blue-600 hover:underline).
+Backend: N/A.
+
+[ ] Task 191: Enhance Empty State Placeholders
+Frontend: Make "No items found" messages more engaging. Include an icon, a clearer call to action (e.g., "Create your first customer!"), and link/button to the create page. Style appropriately.
+Backend: N/A.
+
+[ ] Task 192: Add Confirmation Dialogs for Destructive Actions
+Frontend: Ensure all Delete buttons trigger a JavaScript confirm('Are you sure?') dialog before submitting the form.
+Backend: N/A.
+
+[ ] Task 193: Review Accessibility (Basic Checks)
+Frontend: Perform basic accessibility checks: ensure sufficient color contrast (use Tailwind defaults wisely), ensure forms have labels associated with inputs (<label for="...">), add alt text for any meaningful images (icons might be decorative). Use semantic HTML where appropriate (nav, main, header, footer).
+Backend: N/A.
+
+[ ] Task 194: Ensure Responsive Design Works Across Sizes
+Frontend: Test the application layout and components (tables, forms, nav) on different screen sizes (small mobile, tablet, desktop). Use Tailwind's responsive prefixes (sm:, md:, lg:) to adjust layout, visibility, and styling as needed. Pay attention to tables overflowing.
+Backend: N/A.
+
+[ ] Task 195: Add Favicon
+Frontend: Create a simple favicon (favicon.ico) and place it in the wwwroot directory. Reference it in _Layout.cshtml head section (<link rel="icon" href="/favicon.ico">).
+Backend: N/A.
+
+[ ] Task 196: Refine Page Titles for Clarity and SEO
+Frontend: Ensure every page has a clear and descriptive @ViewData["Title"] that is reflected in the browser tab/window title.
+Backend: N/A.
+
+[ ] Task 197: Clean Up Unused Default .NET Files/Styles
+Frontend: Remove any remaining default CSS (site.css if not used), JavaScript (site.js if not used), or Razor pages/views that came with the template but are no longer needed.
+Backend: N/A.
+
+[ ] Task 198: Add User Profile Page (Frontend - Basic View/Update)
+Frontend: Create Pages/Account/Profile.cshtml. Allow users to view their Full Name and Email. Add a form to update Full Name and Password (optional: current password required). Call new backend endpoints. Protect page.
+Backend: Add endpoints PUT /api/v1/users/me (accepts optional name/password, requires current password maybe) and potentially PATCH for partial updates. Update crud_user.update_user to handle self-update context.
+
+[ ] Task 199: Add Link to Profile Page
+Frontend: Add a "My Profile" link in the user dropdown/area in _Layout.cshtml.
+Backend: N/A.
+
+[ ] Task 200: Commit UI/UX Enhancements
+Frontend: N/A. git add ., git commit -m "feat: Implement various UI/UX enhancements"
+Backend: N/A. git add ., git commit -m "feat: Implement various UI/UX enhancements"
+
+Phase 10: Testing & Debugging (Tasks 201-230)
+
+[ ] Task 201: Setup Backend Unit Tests (pytest)
+Frontend: N/A.
+Backend: Install pytest (pip install pytest pytest-cov). Create tests directory. Configure pytest.ini. Create basic test structure (e.g., tests/crud/test_user_crud.py).
+
+[ ] Task 202: Write Unit Tests for Security Utilities (Backend)
+Frontend: N/A.
+Backend: In tests/test_security.py, write tests for verify_password, get_password_hash, create_access_token (check structure/claims, expiry). Mock config/dependencies if needed.
+
+[ ] Task 203: Write Unit Tests for User CRUD (Backend)
+Frontend: N/A.
+Backend: In tests/crud/test_user_crud.py, write tests for create_user (hashing, defaults), get_user, get_user_by_email, update_user. Use a test database fixture (in-memory SQLite or separate file).
+
+[ ] Task 204: Write Unit Tests for Customer CRUD (Backend)
+Frontend: N/A.
+Backend: Create tests/crud/test_customer_crud.py. Test create_customer (owner set), get_customer (ownership check simulation), get_customers (filtering by owner), update_customer, delete_customer.
+
+[ ] Task 205: Write Unit Tests for Company CRUD (Backend)
+Frontend: N/A.
+Backend: Create tests/crud/test_company_crud.py. Test core Company CRUD functions similarly to Customer tests.
+
+[ ] Task 206: Write Unit Tests for Note CRUD (Backend)
+Frontend: N/A.
+Backend: Create tests/crud/test_note_crud.py. Test Note CRUD, including checks for linked customer/company ownership and ordering.
+
+[ ] Task 207: Write Unit Tests for File CRUD (Backend - DB only)
+Frontend: N/A.
+Backend: Create tests/crud/test_file_crud.py. Test CRUD operations for file records in the database.
+
+[ ] Task 208: Write Unit Tests for Tag CRUD & Associations (Backend)
+Frontend: N/A.
+Backend: Create tests/crud/test_tag_crud.py. Test Tag CRUD. Write tests for adding/removing tags from customer/company objects (customer.tags.append(tag)) and verifying the association persists/is removed after session commit.
+
+[ ] Task 209: Setup Backend Integration Tests (TestClient)
+Frontend: N/A.
+Backend: Use FastAPI's TestClient. Create tests/api/test_login_api.py. Create fixture to provide TestClient instance.
+
+[ ] Task 210: Write Integration Tests for Auth API (Backend)
+Frontend: N/A.
+Backend: Test POST /register, POST /login/access-token (check cookie setting), GET /users/me (with cookie), POST /logout (check cookie clearing). Use test DB.
+
+[ ] Task 211: Write Integration Tests for Customer API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_customer_api.py. Test POST /customers, GET /customers (auth, pagination, search, filter), GET /{id} (auth, ownership), PUT /{id}, DELETE /{id}. Authenticate client using login flow first.
+
+[ ] Task 212: Write Integration Tests for Company API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_company_api.py. Test Company API endpoints similarly to Customer API tests. Include testing customer linking (GET /{id}/customers).
+
+[ ] Task 213: Write Integration Tests for Note API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_note_api.py. Test Note API endpoints, ensuring correct filtering by customer/company and ownership checks.
+
+[ ] Task 214: Write Integration Tests for File API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_file_api.py. Test file upload (mock file object), download (check response type/headers), delete (check 204). Requires careful setup/teardown of test files/directories. Test filtering by customer/company.
+
+[ ] Task 215: Write Integration Tests for Tag API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_tag_api.py. Test Tag CRUD endpoints and association endpoints (POST /customers/{id}/tags/{id}, etc.).
+
+[ ] Task 216: Write Integration Tests for Admin API (Backend)
+Frontend: N/A.
+Backend: Create tests/api/test_admin_api.py and tests/api/test_user_admin_api.py. Test /admin/stats and User Management endpoints (GET /users, POST /users, PUT /users/{id}, DELETE /users/{id}). Ensure non-admin access is forbidden (403). Test self-action restrictions.
+
+[ ] Task 217: Run All Backend Tests & Code Coverage
+Frontend: N/A.
+Backend: Run pytest --cov=app (adjust path to your source code). Analyze coverage report. Aim for reasonable coverage (e.g., >80%) on core logic (CRUD, security, API endpoints). Add tests for uncovered critical paths.
+
+[ ] Task 218: Perform Manual End-to-End Testing (User Flow)
+Frontend: Simulate a typical user journey: Register -> Login -> Create Company -> Create Customer (link to Company) -> Add Note -> Upload File -> Add Tag -> Filter/Search List -> Edit Customer -> Logout.
+Backend: N/A.
+
+[ ] Task 219: Perform Manual End-to-End Testing (Admin Flow)
+Frontend: Simulate admin journey: Login as Admin -> View Dashboard -> Manage Users (Create, Edit, Delete - check restrictions) -> View Customer/Company lists (ensure visibility if needed, or verify separation).
+Backend: N/A.
+
+[ ] Task 220: Perform Cross-Browser Testing (Manual - Basic)
+Frontend: Test the application manually in latest versions of Chrome, Firefox, and Edge (or Safari if relevant). Check for major layout breaks or functional issues.
+Backend: N/A.
+
+[ ] Task 221: Perform Responsive Design Testing (Manual)
+Frontend: Use browser developer tools to simulate different device sizes (mobile, tablet, desktop). Verify layout adjusts correctly and all functionality is usable.
+Backend: N/A.
+
+[ ] Task 222: Debug and Fix Issues Found During Testing
+Frontend: Address any layout, styling, or functional bugs identified in manual or automated frontend testing. Use browser dev tools.
+Backend: Address any errors, logical flaws, or security issues identified in unit, integration, or manual testing. Use debugger, logging.
+
+[ ] Task 223: Review Browser Console for Errors
+Frontend: Navigate through the application and check the browser's JavaScript console for any errors or warnings. Fix any issues found.
+Backend: N/A.
+
+[ ] Task 224: Review Backend Logs for Errors
+Frontend: N/A.
+Backend: While running the application (via uvicorn), monitor the console output for any unhandled exceptions, warnings, or error messages logged by FastAPI/SQLAlchemy/etc. Investigate and fix.
+
+[ ] Task 225: Validate HTML and CSS (Optional Tools)
+Frontend: Optionally use online validators (e.g., W3C) or linters to check generated HTML and CSS for major errors or bad practices. Use Tailwind's linting capabilities if integrated.
+Backend: N/A.
+
+[ ] Task 226: Refactor Code Based on Test Findings
+Frontend: Refactor frontend code (C#, Razor, JS) for clarity, maintainability, or performance based on insights gained during testing.
+Backend: Refactor backend code (Python) based on test results or identified complexities. Improve efficiency of database queries if needed.
+
+[ ] Task 227: Add Missing Unit/Integration Tests for Edge Cases
+Frontend: N/A.
+Backend: Consider edge cases identified during manual testing (e.g., empty inputs, unusual characters, race conditions - though less likely here) and add specific tests if critical.
+
+[ ] Task 228: Ensure Consistent Error Handling Responses (Backend)
+Frontend: N/A.
+Backend: Review API endpoints to ensure consistent error response formats (e.g., {"detail": "Error message"}) and appropriate HTTP status codes (400, 401, 403, 404, 422, 500).
+
+[ ] Task 229: Ensure Consistent Error Handling Display (Frontend)
+Frontend: Review pages to ensure API errors (4xx, 5xx) are caught by ApiClient and displayed gracefully to the user (e.g., via TempData alerts or validation summaries) rather than crashing the page.
+
+[ ] Task 230: Commit Testing Phase Artifacts & Fixes
+Frontend: N/A. git add ., git commit -m "test: Add backend tests and fix issues found during testing"
+Backend: N/A. git add ., git commit -m "test: Add backend tests and fix issues found during testing"
+
+Phase 11: Data Import/Export (Optional Basic CSV) (Tasks 231-240)
+
+[ ] Task 231: Define Customer CSV Export Schema/Columns (Backend)
+Frontend: N/A.
+Backend: Decide which Customer fields to include in a CSV export (e.g., ID, First Name, Last Name, Email, Phone, Company Name - requires join).
+
+[ ] Task 232: Create Customer CSV Export Endpoint (Backend)
+Frontend: N/A.
+Backend: In customers.py, add GET /export/csv endpoint. Protect. Fetch all customers for the user (handle potential large datasets - consider streaming). Include company name via join. Use Python's csv module and StreamingResponse to generate and stream CSV data. Set appropriate Content-Disposition header (attachment; filename="customers.csv") and media_type='text/csv'.
+
+[ ] Task 233: Add Export Button to Customer List (Frontend)
+Frontend: On Pages/Customers/Index.cshtml, add an "Export CSV" button/link (<a>) pointing directly to the /api/v1/customers/export/csv endpoint. Style with Tailwind.
+Backend: N/A.
+
+[ ] Task 234: Test Customer CSV Export (Manual)
+Frontend: Click the Export button. Verify a CSV file downloads with the correct data and headers. Test with a reasonable number of customers.
+Backend: N/A.
+
+[ ] Task 235: Define Customer CSV Import Format/Columns (Backend)
+Frontend: N/A.
+Backend: Define the expected CSV format for importing customers (required columns: First Name, Last Name; optional: Email, Phone, Company Name). Decide how to handle matching/creating companies based on name.
+
+[ ] Task 236: Create Customer CSV Import Endpoint (Backend)
+Frontend: N/A.
+Backend: In customers.py, add POST /import/csv endpoint. Protect. Accept file: UploadFile = File(...). Read CSV data (e.g., using csv.DictReader on file.file). Iterate through rows: validate data, find/create company if needed (check ownership), create customer record using crud_customer.create_customer. Handle errors per row or fail entire batch. Return summary (e.g., {"imported": count, "errors": [...]}).
+
+[ ] Task 237: Create Customer Import Page/Form (Frontend)
+Frontend: Create Pages/Customers/Import.cshtml & .cs. Protect. Add a simple form (method=post, enctype="multipart/form-data") with a file input (<input type="file" name="file" accept=".csv">). Style with Tailwind. Add instructions about required format.
+Backend: N/A.
+
+[ ] Task 238: Implement Customer Import Submission & Feedback (Frontend)
+Frontend: In Import.cshtml.cs OnPostAsync(IFormFile file), check file exists and is CSV. Call ApiClient.PostFileAsync to /api/v1/customers/import/csv. Display success/error summary from API response using TempData/ViewData. Redirect to list on success.
+Backend: N/A.
+
+[ ] Task 239: Test Customer CSV Import (Manual)
+Frontend: Create sample CSV files (valid and with errors). Use the Import page to upload them. Verify customers are created correctly. Verify error handling for bad data or missing columns. Check company linking.
+Backend: N/A.
+
+[ ] Task 240: Commit Data Import/Export Module
+Frontend: N/A. git add ., git commit -m "feat: Add basic Customer CSV import/export"
+Backend: N/A. git add ., git commit -m "feat: Add basic Customer CSV import/export"
+
+Phase 12: Performance Optimization (Tasks 241-250)
+
+[ ] Task 241: Review Database Query Performance (Backend)
+Frontend: N/A.
+Backend: Identify potentially slow queries (e.g., complex joins, list endpoints without pagination limits tested under load, full text search on large tables). Use EXPLAIN QUERY PLAN (SQLite) or similar tools if performance becomes an issue.
+
+[ ] Task 242: Optimize Database Queries (Backend)
+Frontend: N/A.
+Backend: Optimize slow queries identified: ensure indexes are used, use selectinload or joinedload for relationships where appropriate (vs lazy loading causing N+1 queries), select only necessary columns (query(models.Customer.id, models.Customer.first_name)).
+
+[ ] Task 243: Ensure Eager/Selective Loading for Relationships (Backend)
+Frontend: N/A.
+Backend: Review API endpoints returning nested data (e.g., Customer with Owner/Company/Tags). Ensure SQLAlchemy relationships are loaded efficiently using options(selectinload(models.Customer.owner), selectinload(models.Customer.company), ...) in the CRUD functions to avoid N+1 problems.
+
+[ ] Task 244: Add Database Indexing (Backend - Review)
+Frontend: N/A.
+Backend: Double-check that all columns used in WHERE clauses (filters, joins, lookups) and ORDER BY clauses have appropriate indexes. Add any missing ones via Alembic.
+
+[ ] Task 245: Analyze Frontend Asset Sizes
+Frontend: Check the size of generated CSS (site.css) and any JavaScript bundles. Ensure Tailwind is purging unused styles effectively. Consider minification if not already handled by build process.
+Backend: N/A.
+
+[ ] Task 246: Optimize Tailwind CSS Purging
+Frontend: Verify tailwind.config.js content paths accurately cover all files using Tailwind classes (.cshtml). Ensure the build process correctly runs purge. Check output CSS size.
+Backend: N/A.
+
+[ ] Task 247: Implement Frontend Asset Caching Headers (via .NET Config)
+Frontend: Configure static file middleware in Program.cs to serve assets (wwwroot) with appropriate cache control headers (e.g., long expiry for versioned assets, or based on file hash).
+Backend: N/A.
+
+[ ] Task 248: Consider Backend Caching for Read-Heavy Endpoints (Optional)
+Frontend: N/A.
+Backend: If certain read-heavy, non-user-specific endpoints exist (less likely in this CRM) or expensive calculations (like admin stats), consider adding time-based caching using libraries like cachetools or FastAPI utilities.
+
+[ ] Task 249: Profile Application Under Load (Simulated - Optional)
+Frontend: N/A.
+Backend: Optionally use tools like locust to simulate multiple users accessing the API and identify performance bottlenecks under load. Requires writing simple load test scripts.
+
+[ ] Task 250: Commit Performance Optimizations
+Frontend: N/A. git add ., git commit -m "perf: Implement performance optimizations"
+Backend: N/A. git add ., git commit -m "perf: Implement performance optimizations"
+
+Phase 13: Deployment Preparation (Local Focus) (Tasks 251-265)
+
+[ ] Task 251: Create requirements.txt (Backend)
+Frontend: N/A.
+Backend: Activate venv. Run pip freeze > requirements.txt. Review the file, remove dev dependencies if separating later (e.g., pytest).
+
+[ ] Task 252: Create README.md
+Frontend: Document basic project setup, how to run the frontend (.NET) and backend (FastAPI/Uvicorn) locally, any prerequisites (Python, .NET SDK, Node/npm for Tailwind build), and how to seed the initial admin user.
+Backend: Document basic project setup, how to run the frontend (.NET) and backend (FastAPI/Uvicorn) locally, any prerequisites (Python, .NET SDK, Node/npm for Tailwind build), and how to seed the initial admin user.
+
+[ ] Task 253: Configure Uvicorn for Production (Local Dev Settings)
+Frontend: N/A.
+Backend: Define run command in README using uvicorn main:app --host 0.0.0.0 --port 8000. Explain --reload flag for development. Note: For actual production, use a process manager (Gunicorn/Systemd) and potentially more workers.
+
+[ ] Task 254: Configure .NET App for Production (Local Dev Settings)
+Frontend: Ensure launchSettings.json (if used) or run command (dotnet run) is documented. Explain environment variables (ASPNETCORE_ENVIRONMENT=Development/Production). Ensure production build (dotnet publish -c Release) works.
+Backend: N/A.
+
+[ ] Task 255: Environment Variable Configuration Review
+Frontend: N/A.
+Backend: Ensure all sensitive or environment-specific settings (Secret Key, DB path - maybe, Upload Dir, Allowed Origins) are loaded from environment variables via Pydantic Settings (config.py) rather than hardcoded. Document required variables in README.
+
+[ ] Task 256: Database Migration Strategy Documentation
+Frontend: N/A.
+Backend: Document in README how to apply database migrations using Alembic (alembic upgrade head) after pulling changes or setting up initially.
+
+[ ] Task 257: File Storage Path Configuration
+Frontend: N/A.
+Backend: Ensure UPLOAD_DIR is configurable (via env var/config) and documented. Ensure the application creates this directory if it doesn't exist on startup (or document manual creation). Ensure it's excluded from Git.
+
+[ ] Task 258: Update CORS Configuration for Production (Placeholder)
+Frontend: N/A.
+Backend: In main.py CORS middleware, replace permissive origins/methods/headers with specific frontend production URL(s) when deploying. Add comment placeholder for this.
+
+[ ] Task 259: Update Cookie Security Flags for Production (Placeholder)
+Frontend: N/A.
+Backend: In login.py set_cookie, ensure secure=True flag is set when running over HTTPS (production). Add comment placeholder or conditional logic based on environment.
+
+[ ] Task 260: Disable Debug Mode in Production (Placeholders)
+Frontend: Ensure .NET runs with ASPNETCORE_ENVIRONMENT=Production to disable detailed error pages.
+Backend: Ensure FastAPI/Uvicorn runs without --reload and potentially with debug=False (though Uvicorn usually handles this).
+
+[ ] Task 261: Build Frontend Production Assets
+Frontend: Ensure Tailwind build script generates purged/minified CSS for production. Run the .NET publish command (dotnet publish -c Release -o ./publish).
+Backend: N/A.
+
+[ ] Task 262: Final Dependency Check & Cleanup
+Frontend: Review installed Nuget packages. Remove unused ones.
+Backend: Review requirements.txt. Ensure all necessary packages are listed. Remove unused ones. Consider separating dev requirements.
+
+[ ] Task 263: Create Simple Run Scripts (Optional)
+Frontend: Optionally create run-frontend.sh/.bat and run-backend.sh/.bat scripts to simplify local startup for developers.
+Backend: Optionally create run-frontend.sh/.bat and run-backend.sh/.bat scripts to simplify local startup for developers.
+
+[ ] Task 264: Document Backup Strategy (Local Context)
+Frontend: N/A.
+Backend: Document that for local dev, users should manually back up the crm_assistant.db SQLite file and the uploads directory.
+
+[ ] Task 265: Commit Deployment Preparation Artifacts
+Frontend: N/A. git add ., git commit -m "chore: Prepare for local deployment/running"
+Backend: N/A. git add ., git commit -m "chore: Prepare for local deployment/running"
+
+Phase 14: Final QA & Launch Checklist (Local Context) (Tasks 266-300)
+
+[ ] Task 266: Final Code Review (Self or Peer)
+Frontend: Review Razor pages, C# PageModels, Services, JS for clarity, consistency, potential bugs, adherence to style guides.
+Backend: Review Python code (FastAPI endpoints, CRUD, models, schemas, security) for clarity, consistency, potential bugs, security flaws, adherence to style guides (e.g., Black, Flake8).
+
+[ ] Task 267: Final Manual Test Pass - Core User Flows
+Frontend: Perform one last end-to-end test of all major user features: registration, login, customer CRUD & linking, company CRUD & linking, notes, file uploads, tagging, filtering/search, profile update, logout.
+Backend: N/A.
+
+[ ] Task 268: Final Manual Test Pass - Admin Flows
+Frontend: Perform one last end-to-end test of admin features: login, dashboard stats, user management (CRUD, restrictions), viewing data (if applicable).
+Backend: N/A.
+
+[ ] Task 269: Final Manual Test Pass - Error Handling
+Frontend: Test various error scenarios: invalid form inputs, trying to access forbidden pages/data, server errors (if possible to simulate), file upload limits. Verify user-friendly feedback.
+Backend: N/A.
+
+[ ] Task 270: Final Manual Test Pass - Browser Compatibility
+Frontend: Quickly re-check core functionality in latest Chrome, Firefox, Edge.
+Backend: N/A.
+
+[ ] Task 271: Final Manual Test Pass - Responsiveness
+Frontend: Quickly re-check layout and usability on simulated mobile, tablet, desktop sizes.
+Backend: N/A.
+
+[ ] Task 272: Verify All Backend Tests Pass
+Frontend: N/A.
+Backend: Run pytest one last time. Ensure all tests pass. Check coverage if desired.
+
+[ ] Task 273: Check README Instructions
+Frontend: Follow the setup and run instructions in README from scratch in a clean directory/environment. Verify they work correctly.
+Backend: Follow the setup and run instructions in README from scratch in a clean directory/environment. Verify they work correctly.
+
+[ ] Task 274: Verify Database Migrations Apply Correctly
+Frontend: N/A.
+Backend: Delete local crm_assistant.db. Run alembic upgrade head. Verify the database schema is created correctly. Seed admin user.
+
+[ ] Task 275: Verify File Upload Directory Handling
+Frontend: N/A.
+Backend: Ensure the uploads directory is created if missing (or documented). Ensure it's writable by the application process.
+
+[ ] Task 276: Verify Environment Variable Loading
+Frontend: N/A.
+Backend: Test running the backend with required environment variables set. Test running without them to ensure appropriate errors occur (or defaults are used safely).
+
+[ ] Task 277: Check for Exposed Sensitive Information
+Frontend: Scan code/config for accidentally committed passwords, API keys (shouldn't be any here), or overly revealing error messages.
+Backend: Scan code/config for accidentally committed passwords, API keys, Secret Key, or overly revealing error messages in production mode.
+
+[ ] Task 278: Verify Cookie Settings (Local)
+Frontend: Use browser dev tools to inspect the access_token cookie after login. Verify HttpOnly is true, SameSite=Lax, Secure is false (for local HTTP).
+Backend: N/A.
+
+[ ] Task 279: Verify CORS Settings (Local)
+Frontend: Ensure the frontend running on its local port can successfully make API calls to the backend running on its port. Check browser console for CORS errors.
+Backend: N/A.
+
+[ ] Task 280: Remove Any Debugging Code/Statements
+Frontend: Remove temporary console.log, debugger, print statements, or excessive logging used during development.
+Backend: Remove temporary print(), breakpoint(), or excessive debug-level logging not intended for standard operation.
+
+[ ] Task 281: Final Check of .gitignore
+Frontend: N/A.
+Backend: Ensure .gitignore correctly excludes venv, .pyc files, __pycache__, .db files, uploads directory, IDE files, OS files (.DS_Store), sensitive environment files (.env).
+
+[ ] Task 282: Build Final Production Assets (Frontend)
+Frontend: Run the Tailwind production build (npm run build:css or similar) and .NET publish (dotnet publish -c Release) one last time.
+Backend: N/A.
+
+[ ] Task 283: Create Final Git Tag
+Frontend: N/A. git tag v1.0.0 (or appropriate version)
+Backend: N/A. git tag v1.0.0
+
+[ ] Task 284: Push Final Code & Tag to Repository
+Frontend: N/A. git push origin main --tags
+Backend: N/A. git push origin main --tags
+
+[ ] Task 285: Local Launch Checklist Item: Backend Running
+Frontend: N/A
+Backend: Verify the backend FastAPI/Uvicorn process starts without errors using documented run command.
+
+[ ] Task 286: Local Launch Checklist Item: Frontend Running
+Frontend: Verify the frontend .NET application starts without errors using documented run command.
+Backend: N/A
+
+[ ] Task 287: Local Launch Checklist Item: Can Access Frontend URL
+Frontend: Open the frontend URL (e.g., http://localhost:5000) in a browser. Verify the login page loads.
+Backend: N/A
+
+[ ] Task 288: Local Launch Checklist Item: Can Access Backend Health Check
+Frontend: N/A
+Backend: Access the backend health check URL (e.g., http://localhost:8000/api/health). Verify {"status": "ok"} is returned.
+
+[ ] Task 289: Local Launch Checklist Item: Admin Seed Script Executed
+Frontend: N/A
+Backend: Confirm the initial admin user has been created/seeded in the database.
+
+[ ] Task 290: Local Launch Checklist Item: Can Login as Admin
+Frontend: Access the frontend, log in using the seeded admin credentials. Verify successful login and redirection to dashboard.
+Backend: N/A
+
+[ ] Task 291: Local Launch Checklist Item: Core Functionality Smoke Test
+Frontend: Perform a very brief (~5 min) smoke test: view customer list, view a customer detail, add a quick note. Verify no major crashes.
+Backend: N/A
+
+[ ] Task 292: Local Launch Checklist Item: File Upload Path Writable
+Frontend: N/A
+Backend: Verify the application has permissions to write to the configured UPLOAD_DIR. Upload a test file via UI.
+
+[ ] Task 293: Local Launch Checklist Item: Database File Writable
+Frontend: N/A
+Backend: Verify the application has permissions to read/write the crm_assistant.db SQLite file. Create/edit a record via UI.
+
+[ ] Task 294: Local Launch Checklist Item: Configuration Loaded Correctly
+Frontend: N/A
+Backend: Verify key configurations (like allowed origins if tested specifically) seem correct based on application behavior. Check logs for config errors.
+
+[ ] Task 295: Local Launch Checklist Item: README Reviewed
+Frontend: Ensure the README provides clear instructions for anyone else (or future self) to set up and run the project locally.
+Backend: Ensure the README provides clear instructions for anyone else (or future self) to set up and run the project locally.
+
+[ ] Task 296: Document Any Known Issues or Limitations
+Frontend: Add a section to README or separate file documenting any known bugs, limitations (e.g., no real-time updates, basic search performance), or features intentionally omitted.
+Backend: Add a section to README or separate file documenting any known bugs, limitations (e.g., SQLite limitations under high concurrency, basic search performance), or features intentionally omitted (e.g., email notifications, 2FA).
+
+[ ] Task 297: Final Cleanup of Development Branches (Optional)
+Frontend: N/A. Merge any feature branches into main and delete them if no longer needed.
+Backend: N/A. Merge any feature branches into main and delete them if no longer needed.
+
+[ ] Task 298: Backup Final Database State (Local)
+Frontend: N/A.
+Backend: Create a final backup copy of the crm_assistant.db file after all testing and seeding.
+
+[ ] Task 299: Backup Final Uploads Directory (Local)
+Frontend: N/A.
+Backend: Create a final backup copy of the uploads directory content.
+
+[ ] Task 300: Project Complete (Local Development/Testing Phase)
+Frontend: Mark project as complete for this phase. Ready for demonstration or potential future deployment steps.
+Backend: Mark project as complete for this phase. Ready for demonstration or potential future deployment steps.
