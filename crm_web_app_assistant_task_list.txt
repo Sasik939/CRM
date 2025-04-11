@@ -113,11 +113,11 @@ Backend: N/A.
 Frontend: In Login.cshtml.cs OnPostAsync, call ApiClient POST to /api/v1/login/access-token. Receive token (temporarily store or discard as cookie approach is next). Handle errors with Tailwind alerts.
 Backend: N/A.
 
-[ ] Task 29: Modify Login Endpoint for HTTP-Only Cookie (Backend)
+[x] Task 29: Modify Login Endpoint for HTTP-Only Cookie (Backend)
 Frontend: N/A.
 Backend: Modify POST /api/v1/login/access-token. Accept optional remember_me: bool. Create JWT with standard or longer expiry based on remember_me. Create Response object. Use response.set_cookie() with key access_token, value, httponly=True, samesite='lax', secure=False (for local dev), set cookie expires if remember_me. Return success message/user info (not token) in body.
 
-[ ] Task 30: Update Frontend Login to Expect Cookie (Frontend)
+[x] Task 30: Update Frontend Login to Expect Cookie (Frontend)
 Frontend: Modify Login.cshtml.cs OnPostAsync. Send remember_me flag if checked. Expect success response (not token body). Redirect to a protected page (e.g., /Dashboard) on success.
 Backend: N/A.
 
@@ -129,11 +129,11 @@ Backend: Modify dependencies.py. Change get_current_user to accept request: Requ
 Frontend: Register. Login (check browser cookies). Access /api/v1/users/me endpoint via a test page or directly (should work).
 Backend: Ensure /users/me works with cookie.
 
-[ ] Task 33: Implement Logout Endpoint (Backend - Clear Cookie)
+[x] Task 33: Implement Logout Endpoint (Backend - Clear Cookie)
 Frontend: N/A.
 Backend: Add POST /api/v1/login/logout endpoint. Create Response, call response.delete_cookie("access_token"), return response.
 
-[ ] Task 34: Implement Logout Functionality (Frontend)
+[x] Task 34: Implement Logout Functionality (Frontend)
 Frontend: Add Logout button (conditional display). Create Pages/Account/Logout.cshtml & Logout.cshtml.cs. OnPostAsync calls ApiClient POST to /api/v1/login/logout. Redirect to Login page.
 
 [ ] Task 35: Implement Role-Based Dependencies (Backend)
